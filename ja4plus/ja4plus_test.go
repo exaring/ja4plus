@@ -2,9 +2,8 @@ package ja4plus
 
 import (
 	"crypto/tls"
-	"testing"
 	"net/http"
-	"strings"
+	"testing"
 )
 
 func TestJA4(t *testing.T) {
@@ -14,7 +13,6 @@ func TestJA4(t *testing.T) {
 		CipherSuites:      []uint16{tls.TLS_AES_128_GCM_SHA256, tls.TLS_AES_256_GCM_SHA384},
 		SupportedProtos:   []string{"h2", "http/1.1"},
 	}
-}
 
 	// Call the JA4 function
 	fingerprint := JA4(hello)
@@ -26,6 +24,7 @@ func TestJA4(t *testing.T) {
 	if fingerprint != expected {
 		t.Errorf("Expected %s, but got %s", expected, fingerprint)
 	}
+}
 
 func TestJA4H(t *testing.T) {
 	tests := []struct {
