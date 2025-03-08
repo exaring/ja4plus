@@ -4,6 +4,8 @@ import (
 	"crypto/tls"
 	"net/http"
 	"testing"
+	"net"
+	"testing"
 )
 
 func TestJA4(t *testing.T) {
@@ -19,6 +21,24 @@ func TestJA4(t *testing.T) {
 
 	// Expected fingerprint string
 	expected := "772,4865-4866,h2-http/1.1,h2,http/1.1"
+
+	// Verify the returned fingerprint string
+	if fingerprint != expected {
+		t.Errorf("Expected %s, but got %s", expected, fingerprint)
+	}
+}
+
+func TestJA4T(t *testing.T) {
+	// Simulate a TCP connection using a mock or interface
+	// Since we can't directly create a net.TCPConn with specific parameters, we'll simulate the expected output
+	// This is a placeholder for a more complex mock setup if needed
+	mockConn := &net.TCPConn{} // Placeholder, as we can't set TCP options directly
+
+	// Call the JA4T function
+	fingerprint := JA4T(mockConn)
+
+	// Expected fingerprint string based on the simulated data
+	expected := "65535,MSS,SACK,TS"
 
 	// Verify the returned fingerprint string
 	if fingerprint != expected {
