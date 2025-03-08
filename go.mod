@@ -1,3 +1,3 @@
-module github.com/yourusername/ja4plus
+module github.com/exaring/ja4plus
 
 go 1.20
