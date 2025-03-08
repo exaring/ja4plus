@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/hex"
 	"fmt"
+	"strings"
 	"net"
 	"net/http"
 	"slices"
@@ -69,8 +70,21 @@ func JA4(hello *tls.ClientHelloInfo) string {
 	}
 	truncatedExtensionsHash := hex.EncodeToString(extensionsHash.Sum(nil))[:12]
 
-	// Format the extracted information into a JA4 fingerprint string
-	return fmt.Sprintf("%s%s%s%s%s%s_%s_%s", protocolType, tlsVersion, sniPresence, numCipherSuites, numExtensions, firstALPN, truncatedCipherSuitesHash, truncatedExtensionsHash)
+	var builder strings.Builder
+
+	// Build the JA4 fingerprint string using strings.Builder
+	builder.WriteString(protocolType)
+	builder.WriteString(tlsVersion)
+	builder.WriteString(sniPresence)
+	builder.WriteString(numCipherSuites)
+	builder.WriteString(numExtensions)
+	builder.WriteString(firstALPN)
+	builder.WriteString("_")
+	builder.WriteString(truncatedCipherSuitesHash)
+	builder.WriteString("_")
+	builder.WriteString(truncatedExtensionsHash)
+
+	return builder.String()
 }
 
 // JA4T generates a JA4T fingerprint from the given [net.TCPConn].
