@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"crypto/sha256"
+	"encoding/hex"
+	"sort"
 	"strings"
 )
 
@@ -15,20 +18,42 @@ import (
 //	hello := &tls.ClientHelloInfo{...}
 //	fingerprint := JA4(hello)
 func JA4(hello *tls.ClientHelloInfo) string {
-	// Simulate extraction of TLS Version, Cipher Suites, Extensions, and ALPN Protocols
-	tlsVersion := fmt.Sprintf("%d", hello.SupportedVersions[0])
-	cipherSuites := make([]string, len(hello.CipherSuites))
-	for i, suite := range hello.CipherSuites {
-		cipherSuites[i] = fmt.Sprintf("%d", suite)
+	// Determine protocol type (assuming TCP for this example)
+	protocolType := "t"
+
+	// Extract TLS version
+	tlsVersion := fmt.Sprintf("%02d", hello.SupportedVersions[0])
+
+	// Check for presence of SNI
+	sniPresence := "i"
+	if hello.ServerName != "" {
+		sniPresence = "d"
 	}
-	extensions := make([]string, len(hello.SupportedProtos))
-	for i, ext := range hello.SupportedProtos {
-		extensions[i] = ext
+
+	// Count cipher suites
+	numCipherSuites := fmt.Sprintf("%02d", len(hello.CipherSuites))
+
+	// Count extensions
+	numExtensions := fmt.Sprintf("%02d", len(hello.SupportedProtos))
+
+	// Extract first ALPN value
+	firstALPN := "00"
+	if len(hello.SupportedProtos) > 0 {
+		firstALPN = hello.SupportedProtos[0]
 	}
-	alpnProtocols := strings.Join(hello.SupportedProtos, ",")
+
+	// Compute truncated SHA256 of sorted cipher suites
+	sort.Slice(hello.CipherSuites, func(i, j int) bool { return hello.CipherSuites[i] < hello.CipherSuites[j] })
+	cipherSuitesHash := sha256.Sum256([]byte(strings.Join(strings.Fields(fmt.Sprint(hello.CipherSuites)), ",")))
+	truncatedCipherSuitesHash := hex.EncodeToString(cipherSuitesHash[:])[:12]
+
+	// Compute truncated SHA256 of sorted extensions and unsorted signature algorithms
+	sort.Strings(hello.SupportedProtos)
+	extensionsHash := sha256.Sum256([]byte(strings.Join(hello.SupportedProtos, ",")))
+	truncatedExtensionsHash := hex.EncodeToString(extensionsHash[:])[:12]
 
 	// Format the extracted information into a JA4 fingerprint string
-	return fmt.Sprintf("%s,%s,%s,%s", tlsVersion, strings.Join(cipherSuites, "-"), strings.Join(extensions, "-"), alpnProtocols)
+	return fmt.Sprintf("%s%s%s%s%s%s_%s_%s", protocolType, tlsVersion, sniPresence, numCipherSuites, numExtensions, firstALPN, truncatedCipherSuitesHash, truncatedExtensionsHash)
 }
 
 // JA4T generates a JA4T fingerprint from the given [net.TCPConn].
