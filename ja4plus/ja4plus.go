@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"crypto/sha256"
 	"encoding/hex"
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -43,12 +43,12 @@ func JA4(hello *tls.ClientHelloInfo) string {
 	}
 
 	// Compute truncated SHA256 of sorted cipher suites
-	sort.Slice(hello.CipherSuites, func(i, j int) bool { return hello.CipherSuites[i] < hello.CipherSuites[j] })
+	slices.Sort(hello.CipherSuites)
 	cipherSuitesHash := sha256.Sum256([]byte(strings.Join(strings.Fields(fmt.Sprint(hello.CipherSuites)), ",")))
 	truncatedCipherSuitesHash := hex.EncodeToString(cipherSuitesHash[:])[:12]
 
 	// Compute truncated SHA256 of sorted extensions and unsorted signature algorithms
-	sort.Strings(hello.SupportedProtos)
+	slices.Sort(hello.SupportedProtos)
 	extensionsHash := sha256.Sum256([]byte(strings.Join(hello.SupportedProtos, ",")))
 	truncatedExtensionsHash := hex.EncodeToString(extensionsHash[:])[:12]
 
