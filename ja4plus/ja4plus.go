@@ -10,6 +10,9 @@ import (
 
 // JA4 generates a JA4 fingerprint from the given tls.ClientHelloInfo.
 // It extracts TLS Version, Cipher Suites, Extensions, and ALPN Protocols.
+// Usage:
+//   hello := &tls.ClientHelloInfo{...}
+//   fingerprint := JA4(hello)
 func JA4(hello *tls.ClientHelloInfo) string {
 	// Simulate extraction of TLS Version, Cipher Suites, Extensions, and ALPN Protocols
 	tlsVersion := fmt.Sprintf("%d", hello.SupportedVersions[0])
@@ -29,6 +32,9 @@ func JA4(hello *tls.ClientHelloInfo) string {
 
 // JA4T generates a JA4T fingerprint from the given net.TCPConn.
 // It extracts TCP window size and TCP options (e.g., MSS, SACK, Timestamp).
+// Usage:
+//   conn := &net.TCPConn{...}
+//   fingerprint := JA4T(conn)
 func JA4T(conn *net.TCPConn) string {
 	// Simulate extraction of TCP window size and options
 	// In a real implementation, you might use conn.SyscallConn() to access low-level details
@@ -41,6 +47,9 @@ func JA4T(conn *net.TCPConn) string {
 
 // JA4H generates a JA4H fingerprint from the given http.Request.
 // It extracts HTTP Method, HTTP Version, presence of cookies, referrer, total headers, and Accepted-Language.
+// Usage:
+//   req := &http.Request{...}
+//   fingerprint := JA4H(req)
 func JA4H(req *http.Request) string {
 	// Extract HTTP Method
 	method := req.Method
