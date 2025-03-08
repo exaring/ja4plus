@@ -5,6 +5,7 @@ import (
 	"testing"
 	"net/http"
 	"strings"
+)
 
 func TestJA4(t *testing.T) {
 	// Create a mock instance of tls.ClientHelloInfo
@@ -24,7 +25,6 @@ func TestJA4(t *testing.T) {
 	if fingerprint != expected {
 		t.Errorf("Expected %s, but got %s", expected, fingerprint)
 	}
-}
 
 func TestJA4H(t *testing.T) {
 	tests := []struct {
