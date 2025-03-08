@@ -21,7 +21,19 @@ func JA4(hello *tls.ClientHelloInfo) string {
 	protocolType := "t"
 
 	// Extract TLS version
-	tlsVersion := fmt.Sprintf("%02d", hello.SupportedVersions[0])
+	var tlsVersion string
+	switch hello.SupportedVersions[0] {
+	case tls.VersionTLS10:
+		tlsVersion = "10"
+	case tls.VersionTLS11:
+		tlsVersion = "11"
+	case tls.VersionTLS12:
+		tlsVersion = "12"
+	case tls.VersionTLS13:
+		tlsVersion = "13"
+	default:
+		tlsVersion = "00"
+	}
 
 	// Check for presence of SNI
 	sniPresence := "i"

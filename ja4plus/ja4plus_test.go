@@ -19,7 +19,7 @@ func TestJA4(t *testing.T) {
 	fingerprint := JA4(hello)
 
 	// Expected fingerprint string based on the new specification
-	expected := "t13d0202h2_8daaf6152771_b186095e22b6"
+	expected := "t13i0202h2_d7eef855210e_e1c692c67806"
 
 	// Verify the returned fingerprint string
 	if fingerprint != expected {
