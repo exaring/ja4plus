@@ -27,6 +27,40 @@ func TestJA4(t *testing.T) {
 	}
 }
 
+func BenchmarkJA4(b *testing.B) {
+	hello := &tls.ClientHelloInfo{
+		SupportedVersions: []uint16{tls.VersionTLS13},
+		CipherSuites:      []uint16{tls.TLS_AES_128_GCM_SHA256, tls.TLS_AES_256_GCM_SHA384},
+		SupportedProtos:   []string{"h2", "http/1.1"},
+	}
+
+	for i := 0; i < b.N; i++ {
+		JA4(hello)
+	}
+}
+
+func BenchmarkJA4H(b *testing.B) {
+	req := &http.Request{
+		Method: "GET",
+		Proto:  "HTTP/1.1",
+		Header: http.Header{
+			"Accept-Language": []string{"en-US"},
+		},
+	}
+
+	for i := 0; i < b.N; i++ {
+		JA4H(req)
+	}
+}
+
+func BenchmarkJA4T(b *testing.B) {
+	mockConn := &net.TCPConn{} // Placeholder, as we can't set TCP options directly
+
+	for i := 0; i < b.N; i++ {
+		JA4T(mockConn)
+	}
+}
+
 func TestJA4T(t *testing.T) {
 	// Simulate a TCP connection using a mock or interface
 	// Since we can't directly create a net.TCPConn with specific parameters, we'll simulate the expected output
