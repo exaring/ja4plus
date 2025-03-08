@@ -8,7 +8,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"slices"
-	"strings"
 )
 
 // JA4 generates a JA4 fingerprint from the given [tls.ClientHelloInfo].
@@ -44,13 +43,22 @@ func JA4(hello *tls.ClientHelloInfo) string {
 
 	// Compute truncated SHA256 of sorted cipher suites
 	slices.Sort(hello.CipherSuites)
-	cipherSuitesHash := sha256.Sum256([]byte(strings.Join(strings.Fields(fmt.Sprint(hello.CipherSuites)), ",")))
+	cipherSuitesHash := sha256.New()
+	for _, suite := range hello.CipherSuites {
+		suiteBytes := []byte(fmt.Sprintf("%d", suite))
+		cipherSuitesHash.Write(suiteBytes)
+	}
+	truncatedCipherSuitesHash := hex.EncodeToString(cipherSuitesHash.Sum(nil))[:12]
 	truncatedCipherSuitesHash := hex.EncodeToString(cipherSuitesHash[:])[:12]
 
 	// Compute truncated SHA256 of sorted extensions and unsorted signature algorithms
 	slices.Sort(hello.SupportedProtos)
-	extensionsHash := sha256.Sum256([]byte(strings.Join(hello.SupportedProtos, ",")))
-	truncatedExtensionsHash := hex.EncodeToString(extensionsHash[:])[:12]
+	extensionsHash := sha256.New()
+	for _, ext := range hello.SupportedProtos {
+		extBytes := []byte(ext)
+		extensionsHash.Write(extBytes)
+	}
+	truncatedExtensionsHash := hex.EncodeToString(extensionsHash.Sum(nil))[:12]
 
 	// Format the extracted information into a JA4 fingerprint string
 	return fmt.Sprintf("%s%s%s%s%s%s_%s_%s", protocolType, tlsVersion, sniPresence, numCipherSuites, numExtensions, firstALPN, truncatedCipherSuitesHash, truncatedExtensionsHash)
