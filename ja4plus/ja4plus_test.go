@@ -2,9 +2,8 @@ package ja4plus
 
 import (
 	"crypto/tls"
-	"net/http"
-	"testing"
 	"net"
+	"net/http"
 	"testing"
 )
 
