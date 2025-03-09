@@ -15,7 +15,10 @@ func TestJA4(t *testing.T) {
 		SupportedProtos:   []string{"h2", "http/1.1"},
 	}
 
-	// Call the JA4 function
+	// Create a mock net.Conn (using TCP for this test)
+	mockConn := &net.TCPConn{}
+
+	// Call the JA4 function with the mock connection
 	fingerprint := JA4(hello)
 
 	// Expected fingerprint string based on the new specification

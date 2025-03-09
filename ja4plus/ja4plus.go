@@ -18,8 +18,11 @@ import (
 //	hello := &tls.ClientHelloInfo{...}
 //	fingerprint := JA4(hello)
 func JA4(hello *tls.ClientHelloInfo) string {
-	// Determine protocol type (assuming TCP for this example)
+	// Determine protocol type based on the network type
 	protocolType := "t"
+	if hello.Conn != nil && hello.Conn.RemoteAddr().Network() == "udp" {
+		protocolType = "q"
+	}
 
 	// Extract TLS version
 	var tlsVersion string
