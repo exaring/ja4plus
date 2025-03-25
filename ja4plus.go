@@ -38,8 +38,8 @@ func JA4(hello *tls.ClientHelloInfo) string {
 	}
 
 	// Extract TLS version
-	slices.Sort(hello.SupportedVersions)
-	switch hello.SupportedVersions[len(hello.SupportedVersions)-1] {
+	supporetdVersions := slices.Sorted(slices.Values(hello.SupportedVersions))
+	switch supporetdVersions[len(supporetdVersions)-1] {
 	case tls.VersionTLS10:
 		out = append(out, '1', '0')
 	case tls.VersionTLS11:
@@ -69,12 +69,12 @@ func JA4(hello *tls.ClientHelloInfo) string {
 		out = append(out, 'i')
 	}
 
-	// Count cipher suites
-	filteredCipherSuites := slices.DeleteFunc(hello.CipherSuites, greaseFilter)
+	// Count cipher suites; copy to avoid modifying the original
+	filteredCipherSuites := slices.DeleteFunc(slices.Clone(hello.CipherSuites), greaseFilter)
 	out = fmt.Appendf(out, "%02d", min(len(filteredCipherSuites), 99))
 
-	// Count extensions
-	filteredExtensions := slices.DeleteFunc(hello.Extensions, greaseFilter)
+	// Count extensions; copy to avoid modifying the original
+	filteredExtensions := slices.DeleteFunc(slices.Clone(hello.Extensions), greaseFilter)
 	out = fmt.Appendf(out, "%02d", min(len(filteredExtensions), 99))
 
 	// Extract first ALPN value
@@ -87,7 +87,19 @@ func JA4(hello *tls.ClientHelloInfo) string {
 
 	out = append(out, '_')
 
-	// Compute truncated SHA256 of sorted cipher suites
+	out = hex.AppendEncode(out, cipherSuiteHash(filteredCipherSuites))
+
+	out = append(out, '_')
+
+	out = hex.AppendEncode(out, extensionHash(hello.Extensions, hello.SignatureSchemes))
+
+	return string(out)
+}
+
+// cipherSuiteHash computes the truncated SHA256 of sorted cipher suites.
+// The input must be filtered for GREASE values.
+// The return value is an unencoded byte slice of the hash.
+func cipherSuiteHash(filteredCipherSuites []uint16) []byte {
 	if len(filteredCipherSuites) > 0 {
 		slices.Sort(filteredCipherSuites)
 		cipherSuiteList := make([]string, 0, len(filteredCipherSuites))
@@ -95,39 +107,42 @@ func JA4(hello *tls.ClientHelloInfo) string {
 			cipherSuiteList = append(cipherSuiteList, fmt.Sprintf("%04x", suite))
 		}
 		cipherSuiteHash := sha256.Sum256([]byte(strings.Join(cipherSuiteList, ",")))
-		out = hex.AppendEncode(out, cipherSuiteHash[:6])
+		return cipherSuiteHash[:6]
 	} else {
-		out = append(out, []byte("000000000000")...)
+		return []byte{0, 0, 0, 0, 0, 0}
 	}
+}
 
-	out = append(out, '_')
-
-	// Compute truncated SHA256 of sorted extensions and unsorted signature algorithms
-	filteredExtensions = slices.DeleteFunc(hello.Extensions, func(i uint16) bool {
+// extensionHash computes the truncated SHA256 of sorted extensions and unsorted signature algorithms.
+// The return value is an unencoded byte slice of the hash.
+func extensionHash(extensions []uint16, signatureSchemes []tls.SignatureScheme) []byte {
+	sortedExtensions := slices.Clone(extensions)
+	slices.Sort(sortedExtensions)
+	extensionsList := make([]string, 0, len(sortedExtensions))
+	for _, ext := range sortedExtensions {
 		// SNI and ALPN are counted above, but MUST be ignored for the hash.
-		return i == 0x0000 /* SNI */ || i == 0x0010 /* ALPN */
-	})
-	if len(filteredExtensions) > 0 {
-		slices.Sort(filteredExtensions)
-		extensionsList := make([]string, 0, len(filteredExtensions))
-		for _, ext := range filteredExtensions {
-			extensionsList = append(extensionsList, fmt.Sprintf("%04x", ext))
+		if greaseFilter(ext) || ext == 0x0000 /* SNI */ || ext == 0x0010 /* ALPN */ {
+			continue
 		}
-		extensionsListRendered := strings.Join(extensionsList, ",")
-		if len(hello.SignatureSchemes) > 0 {
-			signatureSchemeList := make([]string, 0, len(hello.SignatureSchemes))
-			for _, sig := range hello.SignatureSchemes {
-				signatureSchemeList = append(signatureSchemeList, fmt.Sprintf("%04x", sig))
-			}
-			extensionsListRendered += "_" + strings.Join(signatureSchemeList, ",")
-		}
-		extensionsHash := sha256.Sum256([]byte(extensionsListRendered))
-		out = hex.AppendEncode(out, extensionsHash[:6])
-	} else {
-		out = append(out, []byte("000000000000")...)
+		extensionsList = append(extensionsList, fmt.Sprintf("%04x", ext))
+	}
+	if len(extensionsList) == 0 {
+		return []byte{0, 0, 0, 0, 0, 0}
 	}
 
-	return string(out)
+	extensionsListRendered := strings.Join(extensionsList, ",")
+	if len(signatureSchemes) > 0 {
+		signatureSchemeList := make([]string, 0, len(signatureSchemes))
+		for _, sig := range signatureSchemes {
+			if greaseFilter(uint16(sig)) {
+				continue
+			}
+			signatureSchemeList = append(signatureSchemeList, fmt.Sprintf("%04x", uint16(sig)))
+		}
+		extensionsListRendered += "_" + strings.Join(signatureSchemeList, ",")
+	}
+	extensionsHash := sha256.Sum256([]byte(extensionsListRendered))
+	return extensionsHash[:6]
 }
 
 // JA4T generates a JA4T fingerprint from the given [net.TCPConn].

@@ -2,6 +2,7 @@ package ja4plus
 
 import (
 	"crypto/tls"
+	"encoding/hex"
 	"math"
 	"net"
 	"net/http"
@@ -102,7 +103,7 @@ func BenchmarkJA4H(b *testing.B) {
 		},
 	}
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		JA4H(req)
 	}
 }
@@ -110,7 +111,7 @@ func BenchmarkJA4H(b *testing.B) {
 func BenchmarkJA4T(b *testing.B) {
 	mockConn := &net.TCPConn{} // Placeholder, as we can't set TCP options directly
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		JA4T(mockConn)
 	}
 }
@@ -214,5 +215,65 @@ func TestGreaseFilter(t *testing.T) {
 		if result != expected {
 			t.Errorf("For value 0x%04X, expected %v, but got %v", value, expected, result)
 		}
+	}
+}
+func TestExtensionHash(t *testing.T) {
+	tests := []struct {
+		name             string
+		extensions       []uint16
+		signatureSchemes []tls.SignatureScheme
+		expected         string
+	}{
+		{
+			name:             "No extensions or signature schemes",
+			extensions:       []uint16{},
+			signatureSchemes: []tls.SignatureScheme{},
+			expected:         "000000000000",
+		},
+		{
+			name:             "Only GREASE extensions",
+			extensions:       []uint16{0x0A0A, 0x1A1A},
+			signatureSchemes: []tls.SignatureScheme{},
+			expected:         "000000000000",
+		},
+		{
+			name:             "Extensions with SNI and ALPN",
+			extensions:       []uint16{0x0000, 0x0010},
+			signatureSchemes: []tls.SignatureScheme{},
+			expected:         "000000000000",
+		},
+		{
+			name:             "Valid extensions without signature schemes",
+			extensions:       []uint16{0x0001, 0x0002},
+			signatureSchemes: []tls.SignatureScheme{},
+			expected:         "5b7701cdea2c",
+		},
+		{
+			name:             "Valid unsorted extensions without signature schemes",
+			extensions:       []uint16{0x0002, 0x0001},
+			signatureSchemes: []tls.SignatureScheme{},
+			expected:         "5b7701cdea2c",
+		},
+		{
+			name:             "Valid extensions with signature schemes",
+			extensions:       []uint16{0x0001, 0x0002},
+			signatureSchemes: []tls.SignatureScheme{tls.PKCS1WithSHA256, tls.ECDSAWithP256AndSHA256},
+			expected:         "7ca161ef5d14",
+		},
+		{
+			name:             "Only signature schemes",
+			extensions:       []uint16{},
+			signatureSchemes: []tls.SignatureScheme{tls.PKCS1WithSHA256, tls.ECDSAWithP256AndSHA256},
+			expected:         "000000000000",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			hash := hex.EncodeToString(extensionHash(tt.extensions, tt.signatureSchemes))
+			if hash != tt.expected {
+				t.Errorf("Expected %s, but got %s", tt.expected, hash)
+			}
+		})
 	}
 }
