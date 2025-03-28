@@ -4,10 +4,15 @@ JA4Plus is a go library for generating [ja4+ fingerprints](https://github.com/Fo
 
 ## Overview
 
-JA4Plus currently offers three fingerprinting functions:
+JA4Plus currently offers a single fingerprinting function:
 - **JA4**: Fingerprint based on [TLS ClientHello](https://pkg.go.dev/crypto/tls#ClientHelloInfo) information.
-- **JA4H**: Fingerprint based on HTTP request details.
-- **JA4T**: Fingerprint based on TCP connection parameters.
+
+Contributions are welcome for the other fingerprints in the family 😉
+
+### Omission of JA4H
+
+The JA4H hash, based on properties of the HTTP request, cannot currently be easily implemented in go, since it requires
+headers to be observed in the order sent by the client. See e.g.: https://go.dev/issue/24375
 
 ## Examples
 
