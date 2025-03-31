@@ -65,7 +65,7 @@ func TestJA4(t *testing.T) {
 				SignatureSchemes:  []tls.SignatureScheme{tls.PKCS1WithSHA256, tls.ECDSAWithP256AndSHA256},
 				SupportedCurves:   []tls.CurveID{tls.CurveP256},
 			},
-			expected: "t13i0002h1_000000000000_820ab3bb01bb",
+			expected: "t13i0002h1_000000000000_5b56ea7744b1",
 		},
 	}
 

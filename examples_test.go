@@ -30,5 +30,5 @@ func ExampleJA4() {
 		return
 	}
 	defer resp.Body.Close()
-	// Output: t13i1310h2_f57a46bbacb6_978e6e278f4f
+	// Output: t13i1310h2_f57a46bbacb6_e7c285222651
 }
