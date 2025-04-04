@@ -25,7 +25,7 @@ import (
 //	}
 //	srv.ListenAndServeTLS("cert.pem", "key.pem")
 //
-// Afterwards the fingerprint can be accessed via [JA4Middleware.FingerprintFromContext]
+// Afterwards the fingerprint can be accessed via [JA4FromContext]
 type JA4Middleware struct {
 	connectionFingerprints sync.Map
 }
