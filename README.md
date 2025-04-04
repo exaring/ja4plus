@@ -1,3 +1,7 @@
+[![Tests](https://github.com/exaring/ja4plus/actions/workflows/ci.yml/badge.svg)](https://github.com/exaring/ja4plus/actions/workflows/main.yaml)
+[![Docs](https://pkg.go.dev/badge/github.com/exaring/ja4plus.svg)](https://pkg.go.dev/github.com/exaring/ja4plus)
+[![Report Card](https://goreportcard.com/badge/github.com/exaring/ja4plus)](https://goreportcard.com/report/github.com/exaring/ja4plus)
+
 # JA4Plus
 
 JA4Plus is a go library for generating [ja4+ fingerprints](https://github.com/FoxIO-LLC/ja4).
