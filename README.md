@@ -4,6 +4,8 @@
 
 # JA4Plus
 
+<img src="logo.png" alt="ja4plus logo" width="200pt"/>
+
 JA4Plus is a go library for generating [ja4+ fingerprints](https://github.com/FoxIO-LLC/ja4).
 
 ## Overview
