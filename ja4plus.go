@@ -36,27 +36,31 @@ func JA4(hello *tls.ClientHelloInfo) string {
 	}
 
 	// Extract TLS version
-	supporetdVersions := slices.Sorted(slices.Values(hello.SupportedVersions))
-	switch supporetdVersions[len(supporetdVersions)-1] {
-	case tls.VersionTLS10:
-		out = append(out, '1', '0')
-	case tls.VersionTLS11:
-		out = append(out, '1', '1')
-	case tls.VersionTLS12:
-		out = append(out, '1', '2')
-	case tls.VersionTLS13:
-		out = append(out, '1', '3')
-	case tls.VersionSSL30: // deprecated, but still seen in the wild
-		out = append(out, 's', '3')
-	case 0x0002: // unsupported by go; still seen in the wild
-		out = append(out, 's', '2')
-	case 0xfeff: // DTLS 1.0
-		out = append(out, 'd', '1')
-	case 0xfefd: // DTLS 1.2
-		out = append(out, 'd', '2')
-	case 0xfefc: // DTLS 1.3
-		out = append(out, 'd', '3')
-	default:
+	supportedVersions := slices.Sorted(slices.Values(hello.SupportedVersions))
+	if len(supportedVersions) > 0 {
+		switch supportedVersions[len(supportedVersions)-1] {
+		case tls.VersionTLS10:
+			out = append(out, '1', '0')
+		case tls.VersionTLS11:
+			out = append(out, '1', '1')
+		case tls.VersionTLS12:
+			out = append(out, '1', '2')
+		case tls.VersionTLS13:
+			out = append(out, '1', '3')
+		case tls.VersionSSL30: // deprecated, but still seen in the wild
+			out = append(out, 's', '3')
+		case 0x0002: // unsupported by go; still seen in the wild
+			out = append(out, 's', '2')
+		case 0xfeff: // DTLS 1.0
+			out = append(out, 'd', '1')
+		case 0xfefd: // DTLS 1.2
+			out = append(out, 'd', '2')
+		case 0xfefc: // DTLS 1.3
+			out = append(out, 'd', '3')
+		default:
+			out = append(out, '0', '0')
+		}
+	} else {
 		out = append(out, '0', '0')
 	}
 
