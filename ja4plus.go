@@ -36,8 +36,9 @@ func JA4(hello *tls.ClientHelloInfo) string {
 	}
 
 	// Extract TLS version
-	supporetdVersions := slices.Sorted(slices.Values(hello.SupportedVersions))
-	switch supporetdVersions[len(supporetdVersions)-1] {
+	var supportedVersions []uint16
+	supportedVersions = slices.DeleteFunc(slices.Sorted(slices.Values(hello.SupportedVersions)), greaseFilter)
+	switch supportedVersions[len(supportedVersions)-1] {
 	case tls.VersionTLS10:
 		out = append(out, '1', '0')
 	case tls.VersionTLS11:

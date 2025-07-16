@@ -67,6 +67,14 @@ func TestJA4(t *testing.T) {
 			},
 			expected: "t13i0002h1_000000000000_5b56ea7744b1",
 		},
+		{
+			name: "ClientHelloInfo with grease values in SupportedVersions",
+			hello: &tls.ClientHelloInfo{
+				SupportedVersions: []uint16{tls.VersionTLS13, 0x1A1A /* GREASE */, tls.VersionTLS12, 0x2A2A /* GREASE */},
+				SupportedProtos:   []string{"http/1.1"},
+			},
+			expected: "t13i0000h1_000000000000_000000000000",
+		},
 	}
 
 	for _, tt := range tests {
