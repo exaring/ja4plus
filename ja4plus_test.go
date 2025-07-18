@@ -75,6 +75,27 @@ func TestJA4(t *testing.T) {
 			},
 			expected: "t13i0000h1_000000000000_000000000000",
 		},
+		{
+			name: "ClientHelloInfo with cipher suites, extensions and signature schemes, all greased",
+			hello: &tls.ClientHelloInfo{
+				SupportedVersions: []uint16{0x1A1A /* GREASE */, tls.VersionTLS13},
+				SupportedProtos:   []string{string([]byte{0x1A, 0x1A}) /* GREASE */, "http/1.1"},
+				CipherSuites:      []uint16{tls.TLS_AES_128_GCM_SHA256, tls.TLS_AES_256_GCM_SHA384},
+				Extensions:        []uint16{0x0000 /* SNI */, 0x1A1A /* GREASE */, 0x0042 /* "early data" */},
+				SignatureSchemes:  []tls.SignatureScheme{0x1A1A /* GREASE */, tls.PKCS1WithSHA256, tls.ECDSAWithP256AndSHA256},
+				SupportedCurves:   []tls.CurveID{tls.CurveP256},
+			},
+			expected: "t13i0202h1_62ed6f6ca7ad_5b56ea7744b1",
+		},
+		{
+			// the TLS stack should not allow this, but we ensure we're defensive.
+			name: "Do not panic on invalid proto version",
+			hello: &tls.ClientHelloInfo{
+				SupportedVersions: []uint16{tls.VersionTLS13},
+				SupportedProtos:   []string{"a"}, // invalid!
+			},
+			expected: "t13i000000_000000000000_000000000000",
+		},
 	}
 
 	for _, tt := range tests {
@@ -140,12 +161,6 @@ func TestExtensionHash(t *testing.T) {
 		{
 			name:             "No extensions or signature schemes",
 			extensions:       []uint16{},
-			signatureSchemes: []tls.SignatureScheme{},
-			expected:         "000000000000",
-		},
-		{
-			name:             "Only GREASE extensions",
-			extensions:       []uint16{0x0A0A, 0x1A1A},
 			signatureSchemes: []tls.SignatureScheme{},
 			expected:         "000000000000",
 		},

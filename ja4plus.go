@@ -3,6 +3,7 @@ package ja4plus
 import (
 	"crypto/sha256"
 	"crypto/tls"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"slices"
@@ -76,8 +77,16 @@ func JA4(hello *tls.ClientHelloInfo) string {
 	out = fmt.Appendf(out, "%02d", min(len(filteredExtensions), 99))
 
 	// Extract first ALPN value
-	if len(hello.SupportedProtos) > 0 {
-		firstALPN := hello.SupportedProtos[0]
+	var firstALPN string
+	for _, proto := range hello.SupportedProtos {
+		// Protocols are tecnically strings, but grease values are 2-byte non-printable, so we convert.
+		// see: https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml#alpn-protocol-ids
+		if len(proto) >= 2 && !greaseFilter(binary.BigEndian.Uint16([]byte(proto[:2]))) {
+			firstALPN = proto
+			break
+		}
+	}
+	if firstALPN != "" {
 		out = append(out, firstALPN[0], firstALPN[len(firstALPN)-1])
 	} else {
 		out = append(out, '0', '0')
@@ -111,13 +120,14 @@ func cipherSuiteHash(filteredCipherSuites []uint16) []byte {
 	}
 }
 
-// extensionHash computes the truncated SHA256 of sorted extensions and unsorted signature algorithms.
+// extensionHash computes the truncated SHA256 of sorted and filtered extensions and unsorted signature algorithms.
+// The provided extensions must be filtered for GREASE values.
 // It sorts the provided extensions in-place.
 // The return value is an unencoded byte slice of the hash.
-func extensionHash(extensions []uint16, signatureSchemes []tls.SignatureScheme) []byte {
-	slices.Sort(extensions)
-	extensionsList := make([]string, 0, len(extensions))
-	for _, ext := range extensions {
+func extensionHash(filteredExtensions []uint16, signatureSchemes []tls.SignatureScheme) []byte {
+	slices.Sort(filteredExtensions)
+	extensionsList := make([]string, 0, len(filteredExtensions))
+	for _, ext := range filteredExtensions {
 		// SNI and ALPN are counted above, but MUST be ignored for the hash.
 		if ext == 0x0000 /* SNI */ || ext == 0x0010 /* ALPN */ {
 			continue
