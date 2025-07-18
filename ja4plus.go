@@ -89,7 +89,7 @@ func JA4(hello *tls.ClientHelloInfo) string {
 
 	out = append(out, '_')
 
-	out = hex.AppendEncode(out, extensionHash(hello.Extensions, hello.SignatureSchemes))
+	out = hex.AppendEncode(out, extensionHash(filteredExtensions, hello.SignatureSchemes))
 
 	return string(out)
 }
@@ -112,14 +112,14 @@ func cipherSuiteHash(filteredCipherSuites []uint16) []byte {
 }
 
 // extensionHash computes the truncated SHA256 of sorted extensions and unsorted signature algorithms.
+// It sorts the provided extensions in-place.
 // The return value is an unencoded byte slice of the hash.
 func extensionHash(extensions []uint16, signatureSchemes []tls.SignatureScheme) []byte {
-	sortedExtensions := slices.Clone(extensions)
-	slices.Sort(sortedExtensions)
-	extensionsList := make([]string, 0, len(sortedExtensions))
-	for _, ext := range sortedExtensions {
+	slices.Sort(extensions)
+	extensionsList := make([]string, 0, len(extensions))
+	for _, ext := range extensions {
 		// SNI and ALPN are counted above, but MUST be ignored for the hash.
-		if greaseFilter(ext) || ext == 0x0000 /* SNI */ || ext == 0x0010 /* ALPN */ {
+		if ext == 0x0000 /* SNI */ || ext == 0x0010 /* ALPN */ {
 			continue
 		}
 		extensionsList = append(extensionsList, fmt.Sprintf("%04x", ext))
