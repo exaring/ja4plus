@@ -198,9 +198,9 @@ func TestExtensionHash(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			hash := hex.EncodeToString(extensionHash(tt.extensions, tt.signatureSchemes))
-			if hash != tt.expected {
-				t.Errorf("Expected %s, but got %s", tt.expected, hash)
+			hash := extensionHash(tt.extensions, tt.signatureSchemes)
+			if got := hex.EncodeToString(hash[:]); got != tt.expected {
+				t.Errorf("Expected %s, but got %s", tt.expected, got)
 			}
 		})
 	}
