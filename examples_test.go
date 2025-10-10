@@ -30,5 +30,6 @@ func ExampleJA4() {
 		return
 	}
 	defer resp.Body.Close()
-	// Output: t13i1310h2_f57a46bbacb6_e7c285222651
+	// Note this may change with different go versions (caused by e.g. changes in default cipher suites)
+	// Output: t13i1311h2_f57a46bbacb6_e5728521abd4
 }
