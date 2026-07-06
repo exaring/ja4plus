@@ -99,13 +99,14 @@ func TestJA4(t *testing.T) {
 			expected: "t13i000003_000000000000_000000000000",
 		},
 		{
-			// the TLS stack should not allow this, but we ensure we're defensive.
-			name: "Do not panic on invalid proto version",
+			// A 1-byte ALPN cannot be GREASE, so it is used; per the JA4 spec a
+			// single character is used as both the first and last character.
+			name: "ClientHelloInfo with single-character ALPN",
 			hello: &tls.ClientHelloInfo{
 				SupportedVersions: []uint16{tls.VersionTLS13},
-				SupportedProtos:   []string{"a"}, // invalid!
+				SupportedProtos:   []string{"a"},
 			},
-			expected: "t13i000000_000000000000_000000000000",
+			expected: "t13i0000aa_000000000000_000000000000",
 		},
 	}
 
