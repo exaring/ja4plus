@@ -112,10 +112,17 @@ func JA4(hello *tls.ClientHelloInfo) string {
 			break
 		}
 	}
-	if firstALPN != "" {
-		out = append(out, firstALPN[0], firstALPN[len(firstALPN)-1])
-	} else {
+	if firstALPN == "" {
 		out = append(out, '0', '0')
+	} else if first, last := firstALPN[0], firstALPN[len(firstALPN)-1]; isASCIIAlphanumeric(first) && isASCIIAlphanumeric(last) {
+		out = append(out, first, last)
+	} else {
+		// If the first or last byte is not ASCII alphanumeric, the JA4 spec uses
+		// the first and last characters of the hex representation of the whole
+		// value. Those are the high nibble of the first byte and the low nibble
+		// of the last byte, so we can emit them without hex-encoding the rest.
+		const hexdigits = "0123456789abcdef"
+		out = append(out, hexdigits[first>>4], hexdigits[last&0x0F])
 	}
 
 	out = append(out, '_')
@@ -190,6 +197,11 @@ func extensionHash(filteredExtensions []uint16, signatureSchemes []tls.Signature
 	var truncated [6]byte
 	copy(truncated[:], extensionsHash[:6])
 	return truncated
+}
+
+// isASCIIAlphanumeric reports whether b is 0-9, A-Z, or a-z.
+func isASCIIAlphanumeric(b byte) bool {
+	return (b >= '0' && b <= '9') || (b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z')
 }
 
 func appendTwoDigits(dst []byte, v int) []byte {

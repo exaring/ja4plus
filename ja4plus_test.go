@@ -88,6 +88,17 @@ func TestJA4(t *testing.T) {
 			expected: "t13i0202h1_62ed6f6ca7ad_5b56ea7744b1",
 		},
 		{
+			// Per the JA4 spec, if the first or last byte of the first ALPN is
+			// not ASCII alphanumeric, the first and last chars of the hex
+			// representation of the value are used instead. hex("02f3") -> "03".
+			name: "ClientHelloInfo with non-alphanumeric ALPN",
+			hello: &tls.ClientHelloInfo{
+				SupportedVersions: []uint16{tls.VersionTLS13},
+				SupportedProtos:   []string{string([]byte{0x02, 0xf3})},
+			},
+			expected: "t13i000003_000000000000_000000000000",
+		},
+		{
 			// the TLS stack should not allow this, but we ensure we're defensive.
 			name: "Do not panic on invalid proto version",
 			hello: &tls.ClientHelloInfo{
