@@ -105,9 +105,13 @@ func JA4(hello *tls.ClientHelloInfo) string {
 	// Extract first ALPN value
 	var firstALPN string
 	for _, proto := range hello.SupportedProtos {
-		// Protocols are tecnically strings, but grease values are 2-byte non-printable, so we convert.
+		// Protocols are technically strings, but grease values are 2-byte non-printable, so we convert.
+		// A 1-byte protocol cannot be a GREASE value, so it is always valid.
 		// see: https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml#alpn-protocol-ids
-		if len(proto) >= 2 && !greaseFilter(binary.BigEndian.Uint16([]byte(proto[:2]))) {
+		if len(proto) >= 2 && greaseFilter(binary.BigEndian.Uint16([]byte(proto[:2]))) {
+			continue
+		}
+		if proto != "" {
 			firstALPN = proto
 			break
 		}
